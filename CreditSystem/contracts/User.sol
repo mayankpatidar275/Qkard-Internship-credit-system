@@ -16,10 +16,10 @@ contract User {
     address private head;
     uint256 private size;
 
-    function addUser(address _userAddress, string memory _username, bytes32 _password) internal {
+    function addUser(address _userAddress, string memory _username, bytes32 _passwordHash) internal {
         UserData storage newUser = users[_userAddress];
         newUser.username = _username;
-        newUser.passwordHash = keccak256(abi.encodePacked(_password));
+        newUser.passwordHash = _passwordHash;
         newUser.role = UserRole.NormalUser;
         newUser.next = head;
         head = _userAddress;

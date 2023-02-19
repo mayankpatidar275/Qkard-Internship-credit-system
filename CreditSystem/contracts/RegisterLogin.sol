@@ -3,30 +3,29 @@ pragma solidity ^0.8.10;
 
 import "./User.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract RegisterLogin is User, Ownable {
     enum UserStatus { NotRegistered, Registered }
     enum Action { AdminAction }
 
-    using SafeMath for uint256;
+    using Strings for uint256;
 
     mapping (address => UserStatus) private userStatuses;
 
-    // modifier onlyOwner() override {
-    //     require(msg.sender == owner(), "Caller is not the owner");
-    //     _;
-    // }
+    function isLoggedIn() public view returns (bool) {
+        return userStatuses[msg.sender] == UserStatus.Registered;
+    }
 
-    function register(string memory _username, bytes32 _password) external {
+    function register(string memory _username, string memory _password) external {
         require(bytes(_username).length != 0, "Username must not be empty.");
         require(userStatuses[msg.sender] == UserStatus.NotRegistered, "User is already registered");
 
-        addUser(msg.sender, _username, _password);
+        addUser(msg.sender, _username, keccak256(abi.encodePacked(_password)));
         userStatuses[msg.sender] = UserStatus.Registered;
     }
 
-    function login(bytes32 _password) public view returns (string memory) {
+    function login(string memory _password) public view returns (string memory) {
         require(userStatuses[msg.sender] == UserStatus.Registered, "User is not registered");
         require(keccak256(abi.encodePacked(_password)) == getUser(msg.sender).passwordHash, "Incorrect password");
         return getUser(msg.sender).username;
@@ -58,5 +57,4 @@ contract RegisterLogin is User, Ownable {
     function transferContractOwnership(address newOwner) public onlyOwner {
         transferOwnership(newOwner);
     }
-
 }
