@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 contract User {
+    string public test ;
     enum UserRole { NormalUser, Admin }
 
     struct UserData {
@@ -11,12 +12,12 @@ contract User {
         address next;
     }
 
-    mapping (address => UserData) private users;
+    mapping (address => UserData) public users;
 
     address private head;
     uint256 private size;
 
-    function addUser(address _userAddress, string memory _username, bytes32 _passwordHash) internal {
+    function addUser(address _userAddress, string memory _username, bytes32 _passwordHash) public {
         UserData storage newUser = users[_userAddress];
         newUser.username = _username;
         newUser.passwordHash = _passwordHash;
@@ -26,7 +27,7 @@ contract User {
         size++;
     }
 
-    function getUser(address _userAddress) internal view returns (UserData memory) {
+    function getUser(address _userAddress) public view returns (UserData memory) {
         require(_userAddress != address(0), "Invalid address");
         address currentAddress = head;
         while (currentAddress != address(0)) {

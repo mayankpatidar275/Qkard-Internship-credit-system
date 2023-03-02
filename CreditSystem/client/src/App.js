@@ -5,6 +5,8 @@ import './App.css';
 import RegisterLogin from './components/RegisterLogin';
 import LoanApplication from './components/LoanApplication';
 import User from './components/User';
+import Dashboard from './components/Dashboard';
+
 import RegisterLoginContract from './artifacts/contracts/RegisterLogin.sol/RegisterLogin.json';
 import LoanApplicationContract from './artifacts/contracts/LoanApplication.sol/LoanApplication.json';
 import UserContract from './artifacts/contracts/User.sol/User.json';
@@ -39,15 +41,15 @@ function App() {
     const accounts = await provider.listAccounts();
     setAccount(accounts[0]);
 
-      const registerLoginAddress = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788";
+      const registerLoginAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
       const registerLogin = new ethers.Contract(registerLoginAddress, RegisterLoginContract.abi, signer);
       setRegisterLogin(registerLogin);
-      const isLoggedIn = await registerLogin.isLoggedIn();
+      const isLoggedIn = await registerLogin.isLogIn();
       setIsLoggedIn(isLoggedIn);
    
-      const loanApplication = new ethers.Contract("0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e", LoanApplicationContract.abi, signer);
+      const loanApplication = new ethers.Contract("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", LoanApplicationContract.abi, signer);
       setLoanApplication(loanApplication);
-      const user = new ethers.Contract("0x8A791620dd6260079BF849Dc5567aDC3F2FdC318", UserContract.abi, signer);
+      const user = new ethers.Contract("0x5FbDB2315678afecb367f032d93F642f64180aa3", UserContract.abi, signer);
       setUser(user);
  
     
@@ -55,29 +57,25 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1 className="App-title">Loan Application System</h1>
-      </header>
-      <div className="row">
-        <div className="container-fluid mt-5">
-          <main role="main" className="col-lg-12 d-flex text-center">
-            {isLoggedIn ? (
-              <>
-                <LoanApplication
-                  account={account}
-                  loanApplication={loanApplication}
-                  user={user}
-                />
-                <User account={account} user={user} />
-              </>
-            ) : (
-              <RegisterLogin account={account} registerLogin={registerLogin} />
-            )}
-          </main>
-        </div>
+      <h1 className="App-title">Loan Application System</h1>
+      <div className="container-fluid mt-5">
+        {isLoggedIn ? (
+          <>
+            <User account={account} user={user} registerLogin={registerLogin}/>
+            <Dashboard loanApplication={loanApplication} />
+            <LoanApplication
+              account={account}
+              loanApplication={loanApplication}
+              user={user}
+            />
+          </>
+        ) : (
+          <RegisterLogin account={account} registerLogin={registerLogin} />
+        )}
       </div>
     </div>
   );
+  
 }
 
 export default App;

@@ -4,21 +4,52 @@ function RegisterLogin(props) {
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
 
-  const handleRegister = (event) => {
+  const handleRegister = async (event) => {
     event.preventDefault();
+  
+    const { registerLogin, account } = props;
     const username = usernameRef.current.value;
     const password = passwordRef.current.value;
-    console.log("before");
-    console.log(typeof(username));
-    console.log(typeof(password));
-    props.registerLogin.methods.register(username, password).send({ from: props.account });
-    console.log("after");
+  
+    if (!username || !password) {
+      console.log("Username and password are required.");
+      return;
+    }
+
+    try {
+      await registerLogin.register(username, password, { from: account });
+      usernameRef.current.value = "";
+      passwordRef.current.value = "";
+    } catch (error) {
+      console.error("Error registering:", error);
+    }
+  };
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    const { registerLogin, account } = props;
+    const username = usernameRef.current.value;
+    const password = passwordRef.current.value;
+
+    if (!username || !password) {
+      console.log("Username and password are required.");
+      return;
+    }
+
+    try {
+      await registerLogin.login( password, { from: account });
+      usernameRef.current.value = "";
+      passwordRef.current.value = "";
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
   };
 
   return (
     <div className="container">
       <h2>Register/Login</h2>
-      <form onSubmit={handleRegister}>
+      <form>
         <div className="form-group">
           <label htmlFor="username">Username</label>
           <input
@@ -41,7 +72,8 @@ function RegisterLogin(props) {
             required
           />
         </div>
-        <button type="submit" className="btn btn-primary">Register/Login</button>
+        <button type="submit" className="btn btn-primary" onClick={handleRegister}>Register</button>
+        <button type="submit" className="btn btn-primary" onClick={handleLogin}>Login</button>
       </form>
     </div>
   );
