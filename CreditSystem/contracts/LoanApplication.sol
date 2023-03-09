@@ -41,17 +41,18 @@ contract LoanApplication {
     mapping(uint256 => uint256) public totalLoanValueByDay;
     uint256 public startTime;
     address payable owner;
+    // uint256 public test;
 
     constructor() {
         owner = payable(msg.sender);
-        startTime = block.timestamp; 
+        startTime = (block.timestamp - block.timestamp % 86400) / 86400; 
     }
     // function to revert all unknown transactions
     receive () external payable {
         revert("This contract does not accept");
     }
 
-    function generateLoanId(uint256 _amount) public view returns (uint256) {
+    function generateLoanId(uint256 _amount) internal view returns (uint256) {
         bytes32 nonce = keccak256(abi.encodePacked(block.timestamp, msg.sender, _amount));
         return uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, _amount, nonce)));
     }
@@ -105,9 +106,10 @@ contract LoanApplication {
         require(contractBalance >= loan.amount, "Sorry ! Insufficient funds in contract, consider reducing the loan amount or try later");
 
         //Add the loan to the loansByDay and total value of the loan to loansByDayValue
-        uint256 day = (block.timestamp - block.timestamp % 240) / 240; // Get the current day
+        uint256 day = (block.timestamp - block.timestamp % 86400) / 86400; // Get the current day
         loansByDay[day]++;
         totalLoanValueByDay[day] += loan.amount;
+        // test = day;
 
         loan.interestRate = _interestRate;
         loan.interest = loan.amount * loan.interestRate * loan.duration / 100;
