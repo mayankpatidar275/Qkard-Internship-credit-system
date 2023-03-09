@@ -41,18 +41,18 @@ function App() {
     const accounts = await provider.listAccounts();
     setAccount(accounts[0]);
 
-      const registerLoginAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-      const registerLogin = new ethers.Contract(registerLoginAddress, RegisterLoginContract.abi, signer);
-      setRegisterLogin(registerLogin);
-      const isLoggedIn = await registerLogin.isLogIn();
-      setIsLoggedIn(isLoggedIn);
-   
-      const loanApplication = new ethers.Contract("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", LoanApplicationContract.abi, signer);
-      setLoanApplication(loanApplication);
-      const user = new ethers.Contract("0x5FbDB2315678afecb367f032d93F642f64180aa3", UserContract.abi, signer);
-      setUser(user);
- 
-    
+    const registerLoginAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+    const registerLogin = new ethers.Contract(registerLoginAddress, RegisterLoginContract.abi, signer);
+    setRegisterLogin(registerLogin);
+    const isLoggedIn = await registerLogin.isLogIn();
+    setIsLoggedIn(isLoggedIn);
+
+    const loanApplication = new ethers.Contract("0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", LoanApplicationContract.abi, signer);
+    setLoanApplication(loanApplication);
+    const user = new ethers.Contract("0x5FbDB2315678afecb367f032d93F642f64180aa3", UserContract.abi, signer);
+    setUser(user);
+
+
   }
 
   return (
@@ -61,7 +61,7 @@ function App() {
       <div className="container-fluid mt-5">
         {isLoggedIn ? (
           <>
-            <User account={account} user={user} registerLogin={registerLogin}/>
+            <User account={account} user={user} registerLogin={registerLogin} />
             <Dashboard loanApplication={loanApplication} />
             <LoanApplication
               account={account}
@@ -75,7 +75,8 @@ function App() {
       </div>
     </div>
   );
-  
+
 }
 
 export default App;
+
