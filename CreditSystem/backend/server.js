@@ -59,11 +59,12 @@ io.on('connection', (socket) => {
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 app.post('/store-loans', (req, res) => {
+  const loans = req.body;
   console.log('Received loan data:', loans);
 
   let loanIds = loans.map((loan) => loan.loanId);
 
-  const loans = req.body;
+
   // Check if loan exists in the database
   connection.query('SELECT loanId FROM loans WHERE loanId IN (?)', [loanIds], (err, rows) => {
     if (err) {

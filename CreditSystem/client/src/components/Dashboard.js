@@ -5,7 +5,10 @@ import io from 'socket.io-client';
 const socket = io('http://localhost:8000'); // replace with your server URL
 
 function Dashboard({ loanApplication }) {
-  const [loans, setLoans] = useState([]);
+  const [loans, setLoans] = useState(() => {
+    const storedLoans = localStorage.getItem('loans');
+    return storedLoans ? JSON.parse(storedLoans) : [];
+  });
   const [loansByDay, setLoansByDay] = useState([]);
 
   useEffect(() => {
@@ -26,11 +29,10 @@ function Dashboard({ loanApplication }) {
     }
 
     fetchData();
-  }, [loanApplication]);
+  }, []);
 
   const storeDataInSql = async (data) => {
     try {
-      // console.log(data);
       const response = await fetch('http://localhost:8000/store-loans', {
         method: 'POST',
         headers: {
@@ -49,6 +51,7 @@ function Dashboard({ loanApplication }) {
     socket.on('loansUpdate', (loansData) => {
       console.log('Loans update received:', loansData);
       setLoans(loansData);
+      localStorage.setItem('loans', JSON.stringify(loansData));
     });
 
     return () => {
@@ -64,13 +67,15 @@ function Dashboard({ loanApplication }) {
       const loansByDay = [];
       for (let day = firstDay; day <= lastDay; day++) {
         const loanCount = parseInt(await loanApplication.loansByDay(day));
-        console.log(typeof (loanCount));
+        // console.log(typeof (loanCount));
         loansByDay.push({ day, loanCount });
       }
       setLoansByDay(loansByDay);
     };
     getLoansByDay();
   }, []);
+
+  console.log(loans);
 
   return (
     <>
