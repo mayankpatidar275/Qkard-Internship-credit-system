@@ -1,0 +1,22 @@
+{
+  "name": "creditsystem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ipfs": "^0.55.4",
+    "ipfs-api": "^26.1.2",
+    "ipfs-core": "^0.18.0",
+    "ipfs-http-client": "^44.1.1",
+    "libp2p": "^0.42.2",
+    "libp2p-gossipsub": "^0.13.0",
+    "mysql": "^2.18.1"
+  }
+}

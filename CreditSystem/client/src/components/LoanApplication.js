@@ -16,40 +16,12 @@ function LoanApplication(props) {
     try {
       event.preventDefault();
       const newLoan = await props.loanApplication.applyForLoan(
-        loanAmount, 
-        loanDuration, 
+        loanAmount,
+        loanDuration,
         { from: props.account }
       );
       await newLoan.wait(); // Wait for the transaction to be confirmed
 
-
-      // const loanAppliedFilter = props.loanApplication.filters.LoanApplied(props.account, null);
-
-      // Listen for the LoanApplied event
-      // props.loanApplication.on(loanAppliedFilter, (borrower, newloanId) => {
-      //   console.log(`Borrower ${borrower} applied for loan ID ${newloanId}`);
-
-      //   // Retrieve loan information
-      //   props.loanApplication.getLoan(props.account, newloanId)
-      //     .then((loan) => {
-      //       console.log(`Loan information for loan ID ${newloanId}:`);
-      //       console.log(`- Amount: ${loan.amount}`);
-      //       console.log(`- Duration: ${loan.duration}`);
-      //       console.log(`- Interest Rate: ${loan.interestRate}`);
-      //       // function addLoan(loan) {
-      //       setLoans([...loans, loan]);
-      //       // }
-      //     })
-      //     .catch((error) => console.error("Error retrieving loan information:", error));
-
-      //   setLoanId(newloanId.toString());
-        
-      // });
-
-      // Stop listening for the LoanApplied event after 10 seconds
-      // setTimeout(() => {
-      //   props.loanApplication.off(loanAppliedFilter);
-      // }, 10000);
     } catch (error) {
       console.error("Error applying for loan:", error);
     }
@@ -60,7 +32,7 @@ function LoanApplication(props) {
       event.preventDefault();
       await props.loanApplication.repay(
         props.account,
-        repaymentLoanId, 
+        repaymentLoanId,
         repaymentAmount
       );
       console.log("Loan repayment successful!");
@@ -74,7 +46,7 @@ function LoanApplication(props) {
       event.preventDefault();
       await props.loanApplication.approveLoan(
         approveLoanAddress,
-        approveLoanId, 
+        approveLoanId,
         approveInterestRate
       );
       console.log("Loan approval successful!");
@@ -118,7 +90,7 @@ function LoanApplication(props) {
 
       <h2>Approve Loan</h2>
       <form onSubmit={handleApproveLoan}>
-      <div className="form-group">
+        <div className="form-group">
           <label htmlFor="approveBorrowerAddress">borrower address</label>
           <input
             type="text"

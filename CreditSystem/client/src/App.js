@@ -17,11 +17,14 @@ function App() {
   const [registerLogin, setRegisterLogin] = useState(null);
   const [loanApplication, setLoanApplication] = useState(null);
   const [user, setUser] = useState(null);
+  // const [ipfs, setIpfs] = useState(null);
 
   useEffect(() => {
     async function loadData() {
       await loadWeb3();
       await loadBlockchainData();
+      // await connectToIpfs(); // Connect to IPFS when the component mounts
+
     }
     loadData();
   }, []);
@@ -51,9 +54,8 @@ function App() {
     setLoanApplication(loanApplication);
     const user = new ethers.Contract("0x5FbDB2315678afecb367f032d93F642f64180aa3", UserContract.abi, signer);
     setUser(user);
-
-
   }
+
 
   return (
     <div className="App">
@@ -80,3 +82,22 @@ function App() {
 
 export default App;
 
+
+  // async function connectToIpfs() {
+  //   const ipfs = create('http://127.0.0.1:5001'); // Connect to your IPFS desktop
+  //   setIpfs(ipfs);
+  //   console.log('Connected to IPFS');
+  //   const data = 'Hello, world!'; // Data to upload to IPFS
+  //   const result = await ipfs.add(data); // Upload the data to IPFS
+  //   console.log('Uploaded to IPFS:', result.path); // Print the IPFS path of the uploaded data
+
+  //   const ipfsPath = result.cid.toString(); // IPFS path of the uploaded data
+  //   console.log(ipfsPath);
+  //   const content = [];
+  //   for await (const chunk of ipfs.cat(ipfsPath)) {
+  //     content.push(chunk);
+  //   }
+
+  //   const decodedContent = new TextDecoder().decode((content[0]));
+  //   console.log('Downloaded from IPFS:', decodedContent); // Print the downloaded data
+  // }
