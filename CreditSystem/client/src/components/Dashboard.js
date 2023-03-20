@@ -42,6 +42,7 @@ function Dashboard({ loanApplication }) {
       });
       const result = await response.json();
       console.log('Data stored in SQL:', result);
+      // socket.emit('loansUpdate');
     } catch (error) {
       console.error(error);
     }
@@ -75,7 +76,7 @@ function Dashboard({ loanApplication }) {
     getLoansByDay();
   }, []);
 
-  console.log(loans);
+  // console.log(loans);
 
   return (
     <>

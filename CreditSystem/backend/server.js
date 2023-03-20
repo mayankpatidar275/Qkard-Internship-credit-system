@@ -55,29 +55,49 @@ io.on('connection', (socket) => {
   });
 });
 
-
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
+
 app.post('/store-loans', (req, res) => {
   const loans = req.body;
   console.log('Received loan data:', loans);
 
-  let loanIds = loans.map((loan) => loan.loanId);
-
-
   // Check if loan exists in the database
-  connection.query('SELECT loanId FROM loans WHERE loanId IN (?)', [loanIds], (err, rows) => {
+  connection.query('SELECT * FROM loans', (err, rows) => {
     if (err) {
       console.error(err);
       res.status(500).send('Error checking for existing loans');
       return;
     }
 
-    // Get an array of loanIds that are already in the database
-    let existingLoanIds = rows.map((row) => row.loanId);
-
-    // Filter out loans that are already in the database
-    let newLoans = loans.filter((loan) => !existingLoanIds.includes(loan.loanId));
+    // Filter out loans that already exist in the database
+    let newLoans = loans.filter((loan) => {
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].loanId === loan.loanId) {
+          if (rows[i].amount !== loan.amount ||
+            rows[i].duration !== loan.duration ||
+            rows[i].interestRate !== loan.interestRate ||
+            rows[i].interest !== loan.interest ||
+            rows[i].approved !== loan.approved ||
+            rows[i].repaid !== loan.repaid) {
+            // Update existing loan with new values
+            connection.query('UPDATE loans SET amount=?, duration=?, interestRate=?, interest=?, approved=?, repaid=? WHERE loanId=?',
+              [loan.amount, loan.duration, loan.interestRate, loan.interest, loan.approved, loan.repaid, loan.loanId],
+              (error, result) => {
+                if (error) {
+                  console.error(error);
+                  res.status(500).send('Error updating loan data');
+                  return;
+                }
+                console.log('Loan data updated successfully');
+              }
+            );
+          }
+          return false;
+        }
+      }
+      return true;
+    });
 
     if (newLoans.length === 0) {
       console.log('All loans already exist in the database');
@@ -94,7 +114,7 @@ app.post('/store-loans', (req, res) => {
       } else {
         console.log('Loan data stored successfully');
         res.send('Loan data stored successfully');
-        io.emit('loanUpdate', JSON.stringify(newLoans));
+        io.emit('loansUpdate', JSON.stringify(newLoans));
       }
     });
   });
