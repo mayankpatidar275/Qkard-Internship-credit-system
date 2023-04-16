@@ -15,6 +15,12 @@ async function main() {
   await registerLogin.deployed();
   console.log("RegisterLogin contract deployed to:", registerLogin.address);
 
+  // Deploy RegisterLogin contract
+  const UserRegistry = await hre.ethers.getContractFactory("UserRegistry");
+  const userRegistry = await UserRegistry.deploy();
+  await userRegistry.deployed();
+  console.log("UserRegistry contract deployed to:", userRegistry.address);
+
   // Deploy LoanApplication contract
   const LoanApplication = await hre.ethers.getContractFactory("LoanApplication");
   // const loanApplication = await LoanApplication.deploy(registerLogin.address);

@@ -1,82 +1,72 @@
-import React, { useRef } from 'react';
+// import React, { useState } from 'react';
+// import { Connect, SimpleSigner } from 'uport-connect';
+// import Web3 from 'web3';
 
-function RegisterLogin(props) {
-  const usernameRef = useRef(null);
-  const passwordRef = useRef(null);
+// const web3 = new Web3();
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
-  
-    const { registerLogin, account } = props;
-    const username = usernameRef.current.value;
-    const password = passwordRef.current.value;
-  
-    if (!username || !password) {
-      console.log("Username and password are required.");
-      return;
-    }
+// function Register() {
+//   const [name, setName] = useState('');
+//   const [email, setEmail] = useState('');
+//   const [did, setDid] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
 
-    try {
-      await registerLogin.register(username, password, { from: account });
-      usernameRef.current.value = "";
-      passwordRef.current.value = "";
-    } catch (error) {
-      console.error("Error registering:", error);
-    }
-  };
+//   async function handleRegister() {
+//     setLoading(true);
+//     setError(null);
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+//     const uport = new Connect('Web3 Credit System', {
+//       clientId: '<YOUR_CLIENT_ID>',
+//       network: '<YOUR_NETWORK>',
+//       signer: SimpleSigner('<YOUR_SIGNER>')
+//     });
 
-    const { registerLogin, account } = props;
-    const username = usernameRef.current.value;
-    const password = passwordRef.current.value;
+//     const web3Provider = uport.getProvider();
+//     web3.setProvider(web3Provider);
 
-    if (!username || !password) {
-      console.log("Username and password are required.");
-      return;
-    }
+//     const { did: userDid } = await uport.requestCredentials({ requested: ['name', 'email', 'did'] });
+//     setDid(userDid);
 
-    try {
-      await registerLogin.login( password, { from: account });
-      usernameRef.current.value = "";
-      passwordRef.current.value = "";
-    } catch (error) {
-      console.error("Error logging in:", error);
-    }
-  };
+//     try {
+//       const contract = new web3.eth.Contract(<YOUR_ABI>, <YOUR_CONTRACT_ADDRESS>);
+//       await contract.methods.register(name, email, userDid).send({ from: userDid });
+//       alert('Registration successful!');
+//     } catch (err) {
+//       console.error(err);
+//       setError('Error registering user.');
+//     }
 
-  return (
-    <div className="container">
-      <h2>Register/Login</h2>
-      <form>
-        <div className="form-group">
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            className="form-control"
-            placeholder="Enter username"
-            ref={usernameRef}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            className="form-control"
-            placeholder="Enter password"
-            ref={passwordRef}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary" onClick={handleRegister}>Register</button>
-        <button type="submit" className="btn btn-primary" onClick={handleLogin}>Login</button>
-      </form>
-    </div>
-  );
-}
+//     setLoading(false);
+//   }
 
-export default RegisterLogin;
+//   return (
+//     <div>
+//       <h2>Register</h2>
+//       <div>
+//         <label htmlFor="name">Name</label>
+//         <input
+//           id="name"
+//           type="text"
+//           placeholder="Enter your name"
+//           value={name}
+//           onChange={e => setName(e.target.value)}
+//         />
+//       </div>
+//       <div>
+//         <label htmlFor="email">Email</label>
+//         <input
+//           id="email"
+//           type="email"
+//           placeholder="Enter your email"
+//           value={email}
+//           onChange={e => setEmail(e.target.value)}
+//         />
+//       </div>
+//       <button onClick={handleRegister} disabled={loading}>Register</button>
+//       {did && <p>Your uPort DID: {did}</p>}
+//       {error && <p>Error: {error}</p>}
+//     </div>
+//   );
+// }
+
+// export default Register;
