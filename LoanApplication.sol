@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-contract LoanApplication {
-    // Mapping to store loan details
-    // mapping (address => Loan[]) public loans;
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol"; 
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+
+contract LoanApplication is Ownable {
+
+    enum LoanStatus {Pending, Approved, Repaid}
+
     mapping (address => mapping(uint256 => Loan)) public loans;
+    mapping (address => uint256[]) public borrowerLoans;
     mapping (address => uint256) public creditworthiness;
     mapping (address => uint256) public loancounts;
-    // Mapping to store interest rates
-    mapping (uint256 => mapping (uint256 => uint256)) public interestRates;
 
     // Struct to define loan details
     struct Loan {
@@ -18,33 +21,55 @@ contract LoanApplication {
         uint256 interestRate;
         uint256 interest;
         bool approved;
+        LoanStatus status; 
         bool repaid;
+        uint256 timestamp; //added timestamp field to record the time of loan issuance
+
     }
+
+    // Array to store the addresses and ids of applied loans
+    struct LoanApplicationInfo {
+        address borrower;
+        uint256 loanId;
+    }
+    LoanApplicationInfo[] public loanApplications;
 
     uint256 private loanCounter = 0;
     uint256 public contractBalance = 1000;
-
+    uint256 internal defaultInterestRate = 1;
     // Declare events
     event LoanApplied(address indexed borrower, uint256 loanId);
     event LoanApproved(address indexed borrower, uint256 loanId);
     event LoanRepaid(address indexed borrower, uint256 loanId);
-    event InterestRateSet(uint256 amount, uint256 duration, uint256 interestRate);
+    // event InterestRateSet(uint256 amount, uint256 duration, uint256 interestRate);
 
+    //Added mapping to record the number of loans issued and total value of loans by day
+    mapping(uint256 => uint256) public loansByDay;
+    mapping(uint256 => uint256) public totalLoanValueByDay;
+    uint256 public startTime;
+    address payable oowner;
+    // uint256 public test;
+
+    constructor() {
+        oowner = payable(msg.sender);
+        startTime = (block.timestamp - block.timestamp % 86400) / 86400; 
+    }
     // function to revert all unknown transactions
     receive () external payable {
         revert("This contract does not accept");
     }
-    
-    // Generate a unique loan ID
-    function generateLoanId(uint256 _amount) internal view returns (uint256) {
-        uint256 time = block.timestamp;
-        uint256 random = uint256(keccak256(abi.encodePacked(time, msg.sender, _amount)));
-        return random;
+
+    function generateLoanId(uint256 _amount) internal view returns (uint256) {    
+        bytes32 nonce = keccak256(abi.encodePacked(block.number, msg.sender, _amount));
+        return uint256(keccak256(abi.encodePacked(block.number, msg.sender, _amount, nonce)));
     }
 
     // Function to apply for a loan
-    function applyForLoan(uint256 _amount, uint256 _duration) public {
+    function applyForLoan(uint256 _amount, uint256 _duration) public returns(uint256){
         
+        require(_amount > 0, "Loan amount must be greater than 0");
+        require(_duration > 0, "Loan duration must be greater than 0");
+
         // Set default creditworthiness to 50
         if ((creditworthiness[msg.sender] == 0) && (loancounts[msg.sender] == 0)) {
             creditworthiness[msg.sender] = 50;
@@ -52,24 +77,40 @@ contract LoanApplication {
 
         require(creditworthiness[msg.sender] >= 50, "Insufficient creditworthiness, you should improve your credit score");
 
-        uint256 interestRate = interestRates[_amount][_duration];
+        uint256 interestRate = defaultInterestRate;    // default interest rate
 
         // Calculate interest
-        uint256 interest = _amount * interestRate * _duration / 100;
+        // Calculate interest
+        uint256 interest = SafeMath.div(SafeMath.mul(SafeMath.mul(_amount, interestRate), _duration), 100);
+
+        // uint256 interest = _amount * interestRate * _duration / 100;
         
+        uint256 loanId = generateLoanId(_amount);
+
+        // Add loan ID to borrower's list of loans
+        borrowerLoans[msg.sender].push(loanId);
         // Store loan details
-        Loan memory newLoan = Loan(generateLoanId(_amount), _amount, _duration, interestRate, interest, false, false);
-        loans[msg.sender][generateLoanId(_amount)] = newLoan;
-        loancounts[msg.sender]++;
+        // Loan memory newLoan = Loan(loanId, _amount, _duration, interestRate, interest, false, false, block.timestamp);
+        Loan memory newLoan = Loan(loanId, _amount, _duration, interestRate, interest, false, LoanStatus.Pending, false, block.timestamp);
+        loans[msg.sender][loanId] = newLoan;
+        loancounts[msg.sender] = SafeMath.add(loancounts[msg.sender], 1);
+        // loancounts[msg.sender]++;
+
+        // Store the address and id of the applied loan
+        LoanApplicationInfo memory newLoanApplication = LoanApplicationInfo(msg.sender, loanId);
+        loanApplications.push(newLoanApplication);
 
         // Emit event to log loan application
-        emit LoanApplied(msg.sender, generateLoanId(_amount));
+        emit LoanApplied(msg.sender, loanId);
+
+        // test = loanId;
+        return loanId;
     }
 
     // Function to approve a loan
-    function approveLoan(address payable _borrower, uint256 _loanId) public {
+    function approveLoan(address payable _borrower, uint256 _loanId, uint256 _interestRate) public onlyOwner {
         // Check if the loan with the specified ID exists for the borrower
-        Loan memory loan = loans[_borrower][_loanId];
+        Loan storage loan = loans[_borrower][_loanId];
         require(loan.loanId == _loanId, "No such loan found");
         // Check if loan is not approved
         require(!loan.approved, "Loan already approved");
@@ -79,18 +120,37 @@ contract LoanApplication {
 
         // Transfer the loan amount to the borrower
         require(contractBalance >= loan.amount, "Sorry ! Insufficient funds in contract, consider reducing the loan amount or try later");
+        contractBalance = SafeMath.sub(contractBalance, loan.amount);
+
+        //Add the loan to the loansByDay and total value of the loan to loansByDayValue
+        // uint256 day = (block.timestamp - block.timestamp % 86400) / 86400; // Get the current day
+        // loansByDay[day]++;
+        // totalLoanValueByDay[day] += loan.amount;
+        // Add the loan to the loansByDay and total value of the loan to loansByDayValue
+        uint256 day = SafeMath.div(SafeMath.sub(block.timestamp, SafeMath.mod(block.timestamp, 86400)), 86400); // Get the current day
+        loansByDay[day] = SafeMath.add(loansByDay[day], 1);
+        totalLoanValueByDay[day] = SafeMath.add(totalLoanValueByDay[day], loan.amount);
+
+
+        // test = day;
+
+        loan.interestRate = _interestRate;
+        loan.interest = loan.amount * loan.interestRate * loan.duration / 100;
         // Check the success of the transfer
-        bool transferSuccessful = _borrower.send(loan.amount);
-        require(transferSuccessful, "Transaction failedd");
-        contractBalance -= loan.amount;
+        // bool transferSuccessful = _borrower.send(loan.amount);
+        // require(transferSuccessful, "Transaction failedd");
+        // contractBalance -= loan.amount;
+        contractBalance = SafeMath.sub(contractBalance, loan.amount);
+
 
         // Approve the loan
         loan.approved = true;
 
         // Emit event to log loan approval
-        emit LoanApproved(msg.sender, generateLoanId(loan.amount));
+        emit LoanApproved(msg.sender, _loanId);
 
         // improve the creditworthiness
+        // there is no risk of integer overflow or underflow
         creditworthiness[_borrower] += 10;
     }
 
@@ -103,24 +163,42 @@ contract LoanApplication {
         require(loans[_borrower][_loanId].approved, "Loan not approved.");
 
         // Check if the borrower is paying enough to cover the entire loan
-        require(_amount >= loans[_borrower][_loanId].amount + loans[_borrower][_loanId].interest, "Amount is insufficient.");
+        require(_amount >= SafeMath.add(loans[_borrower][_loanId].amount, loans[_borrower][_loanId].interest), "Amount is insufficient.");
+
+        // contractBalance += (loans[_borrower][_loanId].amount + loans[_borrower][_loanId].interest);
+        contractBalance = SafeMath.add(contractBalance, SafeMath.add(loans[_borrower][_loanId].amount, loans[_borrower][_loanId].interest));
 
         // Update the amount repaid for the loan
         loans[_borrower][_loanId].amount = 0;
         loans[_borrower][_loanId].repaid = true; // set the loan as repaid
-        contractBalance += _amount;
-        
+
         // Emit event to log loan approval
-        emit LoanRepaid(msg.sender, generateLoanId(_amount));
+        emit LoanRepaid(msg.sender, _loanId);
     }
 
+    // Function to retrieve all loans associated with a particular address
+    function getBorrowerLoans(address _borrower) public view returns (Loan[] memory) {
+        uint256[] memory loanIds = borrowerLoans[_borrower];
+        Loan[] memory result = new Loan[](loanIds.length);
+        for (uint256 i = 0; i < loanIds.length; i++) {
+            result[i] = loans[_borrower][loanIds[i]];
+        }
+        return result;
+    }
 
-    // Function to set interest rates
-    function setInterestRate(uint256 _amount, uint256 _duration, uint256 _interestRate) public {
-        require(msg.sender == address(this), "Only contract owner can set interest rates.");
-        interestRates[_amount][_duration] = _interestRate;
-        
-        emit InterestRateSet(_amount, _duration, _interestRate);
+    function getAllLoans() public view returns (Loan[] memory) {
+        Loan[] memory allLoans = new Loan[](loanApplications.length);
+
+        for (uint i = 0; i < loanApplications.length; i++) {
+            allLoans[i] = loans[loanApplications[i].borrower][loanApplications[i].loanId];
+        }
+
+        return allLoans;
+    }
+
+    
+    function getLoan(address addr, uint256 loanId) public view returns (Loan memory) {
+        return loans[addr][loanId];
     }
 
 }
